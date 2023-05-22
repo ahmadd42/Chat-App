@@ -15,7 +15,6 @@ MYSQL_PORT = '25060'
 MYSQL_USER = 'doadmin'
 MYSQL_PASSWORD = 'AVNS_SqedU0rkh1q5DWStOMp'
 MYSQL_DB = "chatterbox"
-MYSQL_SSLMODE = 'REQUIRED'
 
 #App password for gmail account
 MAIL_SENDER = 'ahmadd42@gmail.com'
