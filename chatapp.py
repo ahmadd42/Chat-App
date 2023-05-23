@@ -3,6 +3,7 @@ import eventlet
 #from eventlet import wsgi
 from flask import Flask, render_template, jsonify, request, url_for, session, redirect
 from flask_mysqldb import MySQL
+import mysql.connector
 from itsdangerous import URLSafeTimedSerializer
 from flask_session import Session
 import MySQLdb.cursors
@@ -16,7 +17,7 @@ import webbrowser
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
-mysql = MySQL(app)
+#mysql12 = MySQL(app)
 socketio = SocketIO(app)
 Session(app)
 
@@ -171,24 +172,30 @@ def signin():
     if request.method == 'POST' and 'uname' in request.form and 'psw' in request.form:
         username = request.form['uname']
         password = request.form['psw']
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM users WHERE UserId = % s', (username, ))
+        conn = mysql.connector.connect(username = 'doadmin', 
+        password = 'AVNS_SqedU0rkh1q5DWStOMp', 
+        host = 'chatterbox-do-user-14126773-0.b.db.ondigitalocean.com', 
+        port = 25060, 
+        database = 'chatterbox')
+        cursor = conn.cursor()
+        #cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute("SELECT * FROM chatterbox.users WHERE UserId = \'" + username + "\'")
         account = cursor.fetchone()
 
         if account:
             
-            if not check_password_hash(account['Pass'], password):
+            if not check_password_hash(account[5], password):
                 msg = "Incorrect password"
                 return render_template('index.html', lstatus = msg, runame=username, rpsw=password)
             
-            elif account['confirmed']=="No":
+            elif account[6]=="No":
                 return render_template('notify.html', RegUser=account['UserId'])
             
-            elif account['UserId'] in SignedinUsers:
+            elif account[0] in SignedinUsers:
                 return render_template('exception-page.html', DispMsg='This user has already signed in from another device')
             
             else:    
-                session['username'] = account['UserId'] 
+                session['username'] = account[0] 
                 msg = "Logged in successfully !"
                 socketio.emit('UStatus', {'SMsg': session['username'] + ' has signed in'})
                 SignedinUsers.append(session['username'])
@@ -209,7 +216,7 @@ def signin():
 def signout():
     if session.get('username'):
         socketio.emit('UStatus', {'SMsg': session['username'] + ' has signed out'})
-        #SignedinUsers.remove(session['username'])
+        SignedinUsers.remove(session['username'])
         if session['username'] in DivData:
             DivData.remove(session['username'])
         retHtml = convertToHtml(DivData)
@@ -237,8 +244,13 @@ def register():
         uid = request.form['uid']
         psw = request.form['pass']
         conpass = request.form['conpass']
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM users WHERE UserId = % s OR Email = % s', (uid, email, ))
+        conn = mysql.connector.connect(username = 'doadmin', 
+        password = 'AVNS_SqedU0rkh1q5DWStOMp', 
+        host = 'chatterbox-do-user-14126773-0.b.db.ondigitalocean.com', 
+        port = 25060, 
+        database = 'chatterbox')
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM chatterbox.users WHERE UserId = \'" + uid + "\' OR Email = \'" + email + "\'")
         account = cursor.fetchone()
         if account:
             msg = "* Account with this username/email already exists !"
@@ -265,8 +277,9 @@ def register():
 
         if isValidData:
             hasch = generate_password_hash(psw)
-            cursor.execute('INSERT INTO users VALUES (%s, %s, %s, %s, %s, %s, %s)', (uid, fname, lname, email, '+' + ccode + acode + phone, hasch, 'No'))
-            mysql.connection.commit()
+            cursor.execute("INSERT INTO chatterbox.users VALUES ('" + uid + "','" + fname + "','" + lname + "','" + email + "','+" + ccode + acode + phone + "','" + hasch + "','No')")
+            conn.commit()
+            conn.close()
             token = generate_confirmation_token(email)
             confirm_url = url_for('confirm_email', token=token, _external=True)
             mailtext = "Welcome " + uid + ",\n\n" + "Thank you for registering on Chatterbox. Here, you can chit chat and socialize with thousands of other users worldwide. It has a bunch of other exciting features like screen sharing, audio/video calls and much more.\nPlease follow this link to activate your account:\n\n" + confirm_url

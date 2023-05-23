@@ -10,11 +10,11 @@ SESSION_PERMANENT = False
 SESSION_TYPE = "filesystem"
 
 #MySQL database configuration
-MYSQL_HOST = 'chatterbox-do-user-14126773-0.b.db.ondigitalocean.com'
-MYSQL_PORT = '25060'
-MYSQL_USER = 'doadmin'
-MYSQL_PASSWORD = 'AVNS_SqedU0rkh1q5DWStOMp'
-MYSQL_DB = "chatterbox"
+#MYSQL_HOST = 'chatterbox-do-user-14126773-0.b.db.ondigitalocean.com'
+#MYSQL_PORT = '25060'
+#MYSQL_USER = 'doadmin'
+#MYSQL_PASSWORD = 'AVNS_SqedU0rkh1q5DWStOMp'
+#MYSQL_DB = "chatterbox"
 
 #App password for gmail account
 MAIL_SENDER = 'ahmadd42@gmail.com'
